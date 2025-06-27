@@ -1,6 +1,3 @@
-README
-======
-
 text2apkg.py
 ------------
 
