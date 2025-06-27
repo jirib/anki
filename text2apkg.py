@@ -63,8 +63,7 @@ def main():
         line = line.strip()
         if not line:
             continue
-        cleaned = line.lstrip("-").strip()
-        parts = cleaned.split(args.separator, 1)
+        parts = line.split(args.separator, 1)
         if len(parts) == 2:
             front = parts[0].strip()
             back = parts[1].strip()
