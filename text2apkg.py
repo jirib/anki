@@ -63,20 +63,18 @@ def main():
         line = line.strip()
         if not line:
             continue
-        if line.startswith("-"):
-            # remove dash
-            cleaned = line.lstrip("-").strip()
-            parts = cleaned.split(args.separator, 1)
-            if len(parts) == 2:
-                front = parts[0].strip()
-                back = parts[1].strip()
-                guid = make_guid(front, back)
-                note = genanki.Note(
-                    model=model,
-                    fields=[front, back],
-                    guid=guid
-                )
-                deck.add_note(note)
+        cleaned = line.lstrip("-").strip()
+        parts = cleaned.split(args.separator, 1)
+        if len(parts) == 2:
+            front = parts[0].strip()
+            back = parts[1].strip()
+            guid = make_guid(front, back)
+            note = genanki.Note(
+                model=model,
+                fields=[front, back],
+                guid=guid
+            )
+            deck.add_note(note)
 
     # export
     genanki.Package(deck).write_to_file(args.output)
