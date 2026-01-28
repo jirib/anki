@@ -1,9 +1,17 @@
 #!/usr/bin/env python3
+# /// script
+# requires-python = ">3.12"
+# dependencies = [
+#     "genanki",
+# ]
+# ///
 
+import csv
 import sys
 import argparse
 import genanki
 import hashlib
+import html
 
 def make_guid(front, back):
     """
@@ -16,7 +24,7 @@ def parse_args():
     parser.add_argument("input", nargs="?", help="Input file (or stdin if omitted)")
     parser.add_argument("--deckname", default="My Deck", help="Deck name")
     parser.add_argument("--output", default="output.apkg", help="Output .apkg file")
-    parser.add_argument("--separator", default="–", help="Field separator (default is em-dash)")
+    parser.add_argument("--separator", required=True, help="Field separator (an example: ';')")
     return parser.parse_args()
 
 def main():
@@ -24,24 +32,23 @@ def main():
 
     # read input from file or stdin
     if args.input:
-        with open(args.input, encoding="utf-8") as f:
-            lines = f.readlines()
-    else:
-        lines = sys.stdin.readlines()
+        with open(args.input, encoding="utf-8", newline="") as f:
+            reader = csv.reader(f, delimiter=args.separator)
+            header = next(reader)  # first line = field names
+            rows = list(reader)
 
+    field_names = [h.strip() for h in header]
+    
     # create the Anki model with nicer styling
     model = genanki.Model(
       1607392319,
-      'Simple Model',
-      fields=[
-        {'name': 'Front'},
-        {'name': 'Back'},
-      ],
+      'text2anki_py',
+      fields=[{'name': name} for name in field_names],
       templates=[
         {
           'name': 'Card 1',
-          'qfmt': '{{Front}}',
-          'afmt': '{{Front}}<hr id="answer">{{Back}}',
+          'qfmt': '{{' + field_names[0] + '}}',
+          'afmt': '{{' + field_names[0] + '}}<hr id="answer">{{' + field_names[1] + '}}',
         },
       ],
       css="""
@@ -58,22 +65,26 @@ def main():
       args.deckname
     )
 
+    expected = len(field_names)
+    
     # process lines
-    for line in lines:
-        line = line.strip()
-        if not line:
-            continue
-        parts = line.split(args.separator, 1)
-        if len(parts) == 2:
-            front = parts[0].strip()
-            back = parts[1].strip()
-            guid = make_guid(front, back)
-            note = genanki.Note(
+    for lineno, row in enumerate(rows, start=2):
+        if len(row) != expected:
+            raise ValueError(
+                f'Line {{lineno}}: expected {expected} fields, got {len(row)}'
+            )
+
+        fields = [html.escape(col.strip()) for col in row]
+        
+        guid = hashlib.md5(''.join(fields).encode('utf-8')).hexdigest()
+        
+        note = genanki.Note(
                 model=model,
-                fields=[front, back],
+                fields=fields,
                 guid=guid
             )
-            deck.add_note(note)
+        
+        deck.add_note(note)
 
     # export
     genanki.Package(deck).write_to_file(args.output)
