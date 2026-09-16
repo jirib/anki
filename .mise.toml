@@ -1,0 +1,23 @@
+[tools]
+python = "3.14"
+uv = "latest"
+
+[tasks.install]
+description = "Create the virtualenv and install dependencies"
+run = "uv sync"
+
+[tasks.test]
+description = "Run the test suite"
+run = "uv run pytest"
+
+[tasks.lint]
+description = "Lint the code"
+run = "uv run ruff check ."
+
+[tasks.fmt]
+description = "Format the code"
+run = "uv run ruff format ."
+
+[tasks.check]
+description = "Lint and test"
+depends = ["lint", "test"]

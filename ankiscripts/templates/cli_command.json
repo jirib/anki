@@ -1,0 +1,5 @@
+{
+  "name": "Card 1",
+  "qfmt": "{{question}}",
+  "afmt": "{{question}}<hr id=\"answer\">{{answer}}{{#cli command}}<div style=\"margin-top: 1em;\"><b>Command:</b><br/><code>{{cli command}}</code></div>{{/cli command}}"
+}
